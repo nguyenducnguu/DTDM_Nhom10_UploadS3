@@ -49,11 +49,7 @@ public class MainController {
 			BindingResult bindingResult, HttpServletRequest request) {
 		try {
 			if (file != null) {
-				File convFile = new File(file.getOriginalFilename());
-			    convFile.createNewFile(); 
-			    FileOutputStream fos = new FileOutputStream(convFile); 
-			    fos.write(file.getBytes());
-			    fos.close();
+				File convFile = ConvertMultipartFileToFile(file);
 				
 				UploadService service = new UploadService();
 				String url = service.upload(convFile);
@@ -73,7 +69,23 @@ public class MainController {
 		return "redirect:/all-post";
 
 	}
-	
+	private static File ConvertMultipartFileToFile(final MultipartFile file)
+	{
+		File convFile = null;
+		try
+		{
+			convFile = new File(file.getOriginalFilename());
+			convFile.createNewFile(); 
+			FileOutputStream fos = new FileOutputStream(convFile); 
+			fos.write(file.getBytes());
+			fos.close();
+		}
+		catch(Exception e)
+		{
+			
+		}
+	    return convFile;
+	}
 	@GetMapping("/update-post")
 	public String updatePost(@RequestParam int id, HttpServletRequest request) {
 		request.setAttribute("post", postService.findPost(id));
