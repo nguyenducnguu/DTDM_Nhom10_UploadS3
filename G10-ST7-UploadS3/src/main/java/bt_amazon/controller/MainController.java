@@ -1,10 +1,10 @@
 package bt_amazon.controller;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,23 +14,13 @@ import org.springframework.web.multipart.MultipartFile;
 import bt_amazon.model.Post;
 import bt_amazon.service.PostService;
 import bt_amazon.service.UploadService;
-import bt_amazon.storge.StorageFileNotFoundException;
-import bt_amazon.storge.StorageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 
 @Controller
 public class MainController {
-
-	private final StorageService storageService;
-	
-	@Autowired
-	public MainController(StorageService storageService) {
-		this.storageService = storageService;
-	}
 
 	@Autowired
 	private PostService postService;
@@ -59,7 +49,11 @@ public class MainController {
 			BindingResult bindingResult, HttpServletRequest request) {
 		try {
 			if (file != null) {
-				File convFile = storageService.store(file);
+				File convFile = new File(file.getOriginalFilename());
+			    convFile.createNewFile(); 
+			    FileOutputStream fos = new FileOutputStream(convFile); 
+			    fos.write(file.getBytes());
+			    fos.close();
 				
 				UploadService service = new UploadService();
 				String url = service.upload(convFile);
@@ -73,14 +67,13 @@ public class MainController {
 				post.setFile(_postOld.getFile());
 			}
 		}
-		storageService.deleteAllFile();
 		postService.save(post);
 		request.setAttribute("lstPost", postService.findAll());
 		request.setAttribute("mode", "MODE_ALL");
 		return "redirect:/all-post";
 
 	}
-
+	
 	@GetMapping("/update-post")
 	public String updatePost(@RequestParam int id, HttpServletRequest request) {
 		request.setAttribute("post", postService.findPost(id));
@@ -103,11 +96,5 @@ public class MainController {
 		request.setAttribute("lstPost", postService.findAll());
 		request.setAttribute("mode", "MODE_ALL");
 		return "redirect:/all-post";
-	}
-
-	@SuppressWarnings("rawtypes")
-	@ExceptionHandler(StorageFileNotFoundException.class)
-	public ResponseEntity handleStorageFileNotFound(StorageFileNotFoundException exc) {
-		return ResponseEntity.notFound().build();
 	}
 }
