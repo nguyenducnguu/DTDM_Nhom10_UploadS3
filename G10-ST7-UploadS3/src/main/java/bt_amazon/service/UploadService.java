@@ -26,16 +26,18 @@ public class UploadService {
 		return new AmazonS3Client(credentials);
 	}
 	//Upload file
-	public String upload(File file) throws IOException {
+	public String upload(String path) throws IOException {
 		AmazonS3 client = getAmazonS3();
 		
-		// Tạo bucket - tên bucket phải là duy nhất và không được có ký tự in hoa
+		// Tạo bucket - nếu có rồi sẽ k tạo
 		String bucketName = "g10-st7-upload";
 		client.createBucket(bucketName);
 		
-		// tạo folder trong bucket
+		// tạo folder trong bucket - nếu có rồi sẽ k tạo
 		String folderName = "uploadS3";
 		createFolder(bucketName, folderName, client);
+		
+		File file = new File(path);
 		
 		// upload file vào trong folder ms tạo ở trên và đặt ở chế độ public
 		String fileKey = folderName + "/" + file.getName();
